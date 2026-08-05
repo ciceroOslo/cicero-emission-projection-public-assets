@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Formula Files Schema",
+  "description": "Schema for nested YAML formula definitions used in climate and macroeconomics modeling.",
+  "type": "array",
+  "items": {
+    "$ref": "#/$defs/NestedFormulaDef"
+  },
+  "$defs": {
+    "NestedFormulaDef": {
+      "type": "object",
+      "description": "Root-level formula definition for a specific variable and scenario.",
+      "properties": {
+        "variabel": {
+          "type": "string"
+        },
+        "scenario": {
+          "type": "string"
+        },
+        "formler": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FormulaOrTree"
+          }
+        }
+      },
+      "required": [
+        "variabel",
+        "scenario",
+        "formler"
+      ],
+      "additionalProperties": false
+    },
+    "FormulaOrTree": {
+      "description": "Discriminator validating whether the block is a base Formula or a nested FormulaTree.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/Formula"
+        },
+        {
+          "$ref": "#/$defs/FormulaTree"
+        }
+      ]
+    },
+    "Formula": {
+      "type": "object",
+      "description": "A single formula mapped to a final coordinate patch.",
+      "properties": {
+        "koordinater": {
+          "$ref": "#/$defs/CoordPatch"
+        },
+        "formel": {
+          "description": "The formula string or numeric constant.",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "required": [
+        "koordinater",
+        "formel"
+      ],
+      "additionalProperties": false
+    },
+    "FormulaTree": {
+      "type": "object",
+      "description": "A nested tree of formula definitions containing sub-patches.",
+      "properties": {
+        "koordinater": {
+          "$ref": "#/$defs/CoordPatch"
+        },
+        "formler": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FormulaOrTree"
+          }
+        }
+      },
+      "required": [
+        "koordinater",
+        "formler"
+      ],
+      "additionalProperties": false
+    },
+    "CoordPatch": {
+      "type": "object",
+      "description": "A dictionary mapping dimension IDs to coordinate values or further nested sub-dimensions.",
+      "additionalProperties": {
+        "$ref": "#/$defs/CoordValue"
+      }
+    },
+    "CoordValue": {
+      "description": "Valid types for a YAML coordinate value, enabling deep recursion.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        {
+          "$ref": "#/$defs/CoordPatch"
+        }
+      ]
+    }
+  }
+}
