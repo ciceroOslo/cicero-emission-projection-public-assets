@@ -78,6 +78,7 @@
         },
         "formler": {
           "type": "array",
+          "description": "En liste av formeldefinisjoner for ulike underliggende koordinatområder. Hver definisjon angir koordinatområde i punktet \"koordinater\", og enten en enkelt formel i punktet \"formel\" eller et nytt nøstet tre av formeldefinisjoner i punktet \"formler\".",
           "items": {
             "$ref": "#/$defs/FormulaOrTree"
           }
@@ -91,7 +92,7 @@
     },
     "CoordPatch": {
       "type": "object",
-      "description": "Spesifisering av et koordinatområde som en gitt formel eller gitte formler skal gjelde i",
+      "description": "Spesifisering av et koordinatområde som en gitt formel eller gitte formler skal gjelde i, angitt som en mapping fra dimensjonsnavn til koordinatverdier eller -intervaller",
       "additionalProperties": {
         "$ref": "#/$defs/CoordValue"
       }
