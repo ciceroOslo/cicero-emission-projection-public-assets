@@ -1,0 +1,860 @@
+{
+    "$defs": {
+        "AppParamsSpec": {
+            "additionalProperties": false,
+            "description": "Rarely changed application-wide parameters used in data structures.\n\nAttributes\n----------\nvalue_col_name : str\n    Name of value column in value tables\nscenario_col_name : str\n    Name of the column that holds the scenario ID in value tables\nscenario_col_name : str\n    Name of the scenario that will hold the input data variable values before model computations start (i.e., the value to set in the column with name equal to `scenario_col_name` in the `ValueDataTable` instances that input data processors produce as output).",
+            "properties": {
+                "value_col_name": {
+                    "title": "Value Col Name",
+                    "type": "string"
+                },
+                "scenario_col_name": {
+                    "title": "Scenario Col Name",
+                    "type": "string"
+                },
+                "input_data_scenario_name": {
+                    "title": "Input Data Scenario Name",
+                    "type": "string"
+                },
+                "time_dim_name" : {
+                    "title": "Name of the time dimension",
+                    "type": "string"
+                },
+                "non_agg_dims": {
+                    "title": "Dimensions that are normally not aggregated over",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "scenario_group_col_name": {
+                    "title": "Name of column with scenario group name for each scenario",
+                    "type": "string"
+                },
+                "group_last_scenario_col_name": {
+                    "title": "Name of column with scenario group name for the last scenario in each group, null for other scenarios",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "value_col_name",
+                "scenario_col_name",
+                "input_data_scenario_name"
+            ],
+            "title": "AppParamsSpec",
+            "type": "object"
+        },
+        "BoolModelParamSpec": {
+            "additionalProperties": false,
+            "description": "Class for boolean model parameters.\n\nThe class inherits attributes from `ModelParamSpecBase` and adds or sets\nthe type for the following attributes.\n\nAttributes\n----------\ntype : Literal[\"boolean\"]\n    Type of the parameter. Fixed to \"boolean\" for this class.\nvalue : bool\n    Current value for the parameter.",
+            "properties": {
+                "name": {
+                    "title": "Name",
+                    "type": "string"
+                },
+                "description": {
+                    "title": "Description",
+                    "type": "string"
+                },
+                "type": {
+                    "const": "boolean",
+                    "title": "Type",
+                    "type": "string"
+                },
+                "value": {
+                    "title": "Value",
+                    "type": "boolean"
+                },
+                "hidden": {
+                    "default": false,
+                    "title": "Hidden",
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "name",
+                "description",
+                "type",
+                "value"
+            ],
+            "title": "BoolModelParamSpec",
+            "type": "object"
+        },
+        "ChoiceModelParamSpec": {
+            "additionalProperties": false,
+            "description": "Class for choice model parameters.\n\nThe class inherits attributes from `ModelParamSpecBase` and adds or sets\nthe type for the following attributes.\n\nAttributes\n----------\ntype : Literal[\"choice\"]\n    Type of the parameter. Fixed to \"choice\" for this class.\nchoices : list[str]\n    List of choices for the parameter.\nvalue : str\n    Current value for the parameter.",
+            "properties": {
+                "name": {
+                    "title": "Name",
+                    "type": "string"
+                },
+                "description": {
+                    "title": "Description",
+                    "type": "string"
+                },
+                "type": {
+                    "const": "choice",
+                    "title": "Type",
+                    "type": "string"
+                },
+                "value": {
+                    "title": "Value",
+                    "type": "string"
+                },
+                "hidden": {
+                    "default": false,
+                    "title": "Hidden",
+                    "type": "boolean"
+                },
+                "choices": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "Choices",
+                    "type": "array"
+                }
+            },
+            "required": [
+                "name",
+                "description",
+                "type",
+                "value",
+                "choices"
+            ],
+            "title": "ChoiceModelParamSpec",
+            "type": "object"
+        },
+        "DataProcessorParametersBase": {
+            "additionalProperties": true,
+            "description": "Base class for data processor parameters.\n\nEach input data processor class (subclass of\n`dataproc.InputDataProcessorBase`) shoud define a subclass of this class\nwith the required fields and validation logic, and expose it as the class\nattribute `parameters_class`.\n\nThe base class does not contain any fields, and has no restrictions on extra\nfields, so any field defined as taking an instance of this class as its\nvalue can parse any input parameters without raising errors. Subclasses\nmay forbid extra fields (by setting `extra='forbid' in its `model_config`\nclass attribute), and should add all required validation logic.",
+            "properties": {},
+            "title": "DataProcessorParametersBase",
+            "type": "object"
+        },
+        "DimSpec": {
+            "additionalProperties": false,
+            "description": "Specification for a single dimension in the model.\n\nThis config class takes a generic type parameter `ValueType`. This should be\nset to a Python type that is logically compatible with the value of the\n`dim_type` field for a given dimension.",
+            "properties": {
+                "name": {
+                    "title": "Name",
+                    "type": "string"
+                },
+                "description": {
+                    "title": "Description",
+                    "type": "string"
+                },
+                "type": {
+                    "title": "Coord Type",
+                    "type": "string",
+                    "enum": ["str", "int"]
+                },
+                "values": {
+                    "anyOf": [
+                        {
+                            "items": {},
+                            "type": "array"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Values"
+                },
+                "hierarchy": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/MultilevelDimSpec"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                }
+            },
+            "required": [
+                "name",
+                "description",
+                "type"
+            ],
+            "title": "DimSpec",
+            "type": "object"
+        },
+        "DimSpec_TypeVar_": {
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "title": "Name",
+                    "type": "string"
+                },
+                "description": {
+                    "title": "Description",
+                    "type": "string"
+                },
+                "type": {
+                    "title": "Coord Type",
+                    "type": "string",
+                    "enum": ["int", "str"]
+                },
+                "values": {
+                    "anyOf": [
+                        {
+                            "items": {},
+                            "type": "array"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Values"
+                },
+                "hierarchy": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/MultilevelDimSpec"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                }
+            },
+            "required": [
+                "name",
+                "description",
+                "type"
+            ],
+            "title": "DimSpec[TypeVar]",
+            "type": "object"
+        },
+        "DimsConfig": {
+            "additionalProperties": false,
+            "description": "Configuration of model dimensions.",
+            "properties": {
+                "dims": {
+                    "additionalProperties": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/$defs/DimSpec"
+                            },
+                            {
+                                "$ref": "#/$defs/MultilevelDimSpec"
+                            }
+                        ]
+                    },
+                    "title": "Dims",
+                    "type": "object"
+                }
+            },
+            "required": [
+                "dims"
+            ],
+            "title": "DimsConfig",
+            "type": "object"
+        },
+        "InputDataProcessorSpec": {
+            "additionalProperties": false,
+            "description": "Specification of an input data processor.\n\nThis class provides information about an input data processor, and how to\ninstantiate it. The actual processing is done by subclasses of\n`dataproc.InputDataProcessorBase`, which are specified through the\n`processor_type` field.\n\nAttributes\n----------\nprocessor_type : str\n    Qualified name of the class to instantiate, relative to\n    `cicero_emission_projection_model.dataproc`. When the class is\n    instantiated, the class will be imported and set on the\n    `processor_class` field. Note that for security reasons, the name cannot\n    be specified as a fully qualified class name, but must be relative to\n    `cicero_emission_projection_model.dataproc`, starting with a leading \".\"\ntarget_variable : str or VariableSpec\n    Either the name of the variable to which the data processor applies, or\n    the `.config.model.variable.VariableSpec` instance for the variable that\n    the process produces. If the field is a string, it can be replaced by\n    the corresponding variable by calling `self.set_target_variable_spec()`.\n    Alternatively, use the `target_variable_spec` property, which will\n    always return a `VariableSpec` instance if it succeeds, and will raise\n    an exception if no `VariableSpec` instance has been set yet.\nprocessor_parameters : DataProcessorParametersBase\n    Parameters to pass to the data processor. The schema should be defined\n    by the class attribute `parameters_class` of the\n    `InputDataProcessorBase` class referenced in the `processor_class`\n    field.\n\nProperties\n----------\nprocessor_class : type\n    The class to use to process data. If not already cached, the class is\n    imported using the value of the `processor_type` field.\ntarget_variable_spec : VariableSpec\n    The `VariableSpec` instance for the variable to which the data processor\n    applies. Raises an exception if no `VariableSpec` instance has been\n    set yet.",
+            "properties": {
+                "processor_type": {
+                    "title": "Processor Type",
+                    "type": "string"
+                },
+                "target_variable": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "$ref": "#/$defs/VariableSpec"
+                        }
+                    ],
+                    "title": "Target Variable"
+                },
+                "processor_parameters": {
+                    "$ref": "#/$defs/DataProcessorParametersBase"
+                }
+            },
+            "required": [
+                "processor_type",
+                "target_variable",
+                "processor_parameters"
+            ],
+            "title": "InputDataProcessorSpec",
+            "type": "object"
+        },
+        "InputDataSourceSpec": {
+            "additionalProperties": false,
+            "description": "Specification of an input data source.\n\nThis class provides information about an input data source, and how to\ninstantiate data processor to process data from the source into variable\nvalues. The actual processing is done by subclasses of\n`dataproc.InputDataProcessorBase`, which are specified in the\n`processor_class` field of the items in the list under the `processors`\nfield.\n\nAttributes\n----------\nname : str\n    Name of the input data source.\ndescription : str\n    Full-sentence description of the input data source. If applicable, the\n    description should also include a URL to where the data was obtained or\n    where updated data can be downloaded from, but this is intended for\n    human consumption, and not for machine processing.\nprocessors : list[InputDataProcessorSpec]\n    List of data processors used to process the data from the input data\n    source, with the parameters to pass to each processor and the variable\n    that will be produced by each of them.",
+            "properties": {
+                "name": {
+                    "title": "Name",
+                    "type": "string"
+                },
+                "description": {
+                    "title": "Description",
+                    "type": "string"
+                },
+                "processors": {
+                    "items": {
+                        "$ref": "#/$defs/InputDataProcessorSpec"
+                    },
+                    "title": "Processors",
+                    "type": "array"
+                }
+            },
+            "required": [
+                "name",
+                "description",
+                "processors"
+            ],
+            "title": "InputDataSourceSpec",
+            "type": "object"
+        },
+        "ModelParamGroupSpec": {
+            "additionalProperties": false,
+            "description": "Specification of a group of model parameters, to be grouped in the UI.\n\nAttributes\n----------\nname : str\n    Name of the parameter group.\ndescription : str\n    Description of the parameter group.\nparams : list[str]\n    List of parameter IDs included in the group. NB! This attribute may be\n    changed into a dict of the actual ModelParamSpec objects in the future.\n    Use the `param_ids` property instead if you need a list of string-valued\n    parameter IDs.\nhidden : bool\n    Whether the parameter group should be hidden from the user interface.",
+            "properties": {
+                "name": {
+                    "title": "Name",
+                    "type": "string"
+                },
+                "description": {
+                    "title": "Description",
+                    "type": "string"
+                },
+                "params": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "Params",
+                    "type": "array"
+                },
+                "hidden": {
+                    "default": false,
+                    "title": "Hidden",
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "name",
+                "description",
+                "params"
+            ],
+            "title": "ModelParamGroupSpec",
+            "type": "object"
+        },
+        "ModelParamsConfig": {
+            "additionalProperties": false,
+            "description": "Specifications of model parameters and parameter groups.\n\nThis class defines and parses the `params` block in the config file, and\nensures that all defined parameters (and no unknown parameter IDs) are\nincluded exactly once in one parameter group.\n\nAttributes\n----------\nparam_defs : dict[str, ModelParamSpec]\n    Dictionary of parameter IDs to their specifications.\nparam_groups : list[ModelParamGroupSpec]\n    List of parameter groups.",
+            "properties": {
+                "param_defs": {
+                    "additionalProperties": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/$defs/NumModelParamSpec"
+                            },
+                            {
+                                "$ref": "#/$defs/IntModelParamSpec"
+                            },
+                            {
+                                "$ref": "#/$defs/BoolModelParamSpec"
+                            },
+                            {
+                                "$ref": "#/$defs/ChoiceModelParamSpec"
+                            }
+                        ]
+                    },
+                    "title": "Param Defs",
+                    "type": "object"
+                },
+                "param_groups": {
+                    "items": {
+                        "$ref": "#/$defs/ModelParamGroupSpec"
+                    },
+                    "title": "Param Groups",
+                    "type": "array"
+                }
+            },
+            "required": [
+                "param_defs",
+                "param_groups"
+            ],
+            "title": "ModelParamsConfig",
+            "type": "object"
+        },
+        "MultilevelDimSpec": {
+            "additionalProperties": false,
+            "description": "Specification for a dimension with multiple levels.",
+            "properties": {
+                "name": {
+                    "title": "Name",
+                    "type": "string"
+                },
+                "description": {
+                    "title": "Description",
+                    "type": "string"
+                },
+                "type": {
+                    "title": "Coord Type",
+                    "type": "string",
+                    "enum": ["multi"]
+                },
+                "values": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "items": {},
+                                "type": "array"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Values"
+                },
+                "hierarchy": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/MultilevelDimSpec"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
+                "sub_dims": {
+                    "additionalProperties": {
+                        "$ref": "#/$defs/DimSpec_TypeVar_"
+                    },
+                    "title": "Sub Dims",
+                    "type": "object"
+                }
+            },
+            "required": [
+                "name",
+                "description",
+                "type",
+                "sub_dims"
+            ],
+            "title": "MultilevelDimSpec",
+            "type": "object"
+        },
+        "NumModelParamSpec": {
+            "additionalProperties": false,
+            "description": "Class for numeric model parameters.\n\nThe class inherits attributes from `ModelParamSpecBase` and adds or sets\nthe type for the following attributes.\n\nAttributes\n----------\ntype : Literal[\"number\"]\n    Type of the parameter. Fixed to \"number\" for this class.\nvalue : float\n    Current value for the parameter.\nunit : str\n    Unit of the parameter.",
+            "properties": {
+                "name": {
+                    "title": "Name",
+                    "type": "string"
+                },
+                "description": {
+                    "title": "Description",
+                    "type": "string"
+                },
+                "type": {
+                    "const": "number",
+                    "title": "Type",
+                    "type": "string"
+                },
+                "value": {
+                    "title": "Value",
+                    "type": "number"
+                },
+                "hidden": {
+                    "default": false,
+                    "title": "Hidden",
+                    "type": "boolean"
+                },
+                "unit": {
+                    "title": "Unit",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "description",
+                "type",
+                "value",
+                "unit"
+            ],
+            "title": "NumModelParamSpec",
+            "type": "object"
+        },
+        "IntModelParamSpec": {
+            "additionalProperties": false,
+            "description": "Class for numeric integer model parameters.\n\nThe class inherits attributes from `ModelParamSpecBase` and adds or sets\nthe type for the following attributes.\n\nAttributes\n----------\ntype : Literal[\"integer\"]\n    Type of the parameter. Fixed to \"integer\" for this class.\nvalue : int\n    Current value for the parameter.\nunit : str\n    Unit of the parameter. Optional, by default an empty string (dimensionless quantity).",
+            "properties": {
+                "name": {
+                    "title": "Name",
+                    "type": "string"
+                },
+                "description": {
+                    "title": "Description",
+                    "type": "string"
+                },
+                "type": {
+                    "const": "integer",
+                    "title": "Type",
+                    "type": "string"
+                },
+                "value": {
+                    "title": "Value",
+                    "type": "integer"
+                },
+                "hidden": {
+                    "default": false,
+                    "title": "Hidden",
+                    "type": "boolean"
+                },
+                "unit": {
+                    "title": "Unit",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "description",
+                "type",
+                "value"
+            ],
+            "title": "IntModelParamSpec",
+            "type": "object"
+        },
+        "ScenarioGroupSpec": {
+            "additionalProperties": false,
+            "description": "Definitions of a scenario group, in scenarios/scenario_groups in the config file.\n\nAttributes\n----------\nname : str\n    Name of the scenario group.\ndescription : str\n    Free-form description of or notes about the scenario group.",
+            "properties": {
+                "name": {
+                    "title": "Name",
+                    "type": "string"
+                },
+                "description": {
+                    "title": "Description",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "description"
+            ],
+            "title": "ScenarioGroupSpec",
+            "type": "object"
+        },
+        "ScenarioSpec": {
+            "additionalProperties": false,
+            "description": "Definitions of a scenario, in scenarios/scenario_defs in the config file.\n\nAttributes\n----------\nname : str\n    Name of the scenario.\ndescription : str\n    Free-form description of or notes about the scenario.",
+            "properties": {
+                "name": {
+                    "title": "Name",
+                    "type": "string"
+                },
+                "description": {
+                    "title": "Description",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "description"
+            ],
+            "title": "ScenarioSpec",
+            "type": "object"
+        },
+        "ScenariosConfig": {
+            "additionalProperties": false,
+            "description": "Config for scenarios and groups, and ordering of them.\n\nCollects and contains the sub-blocks under `scenarios` in the app_spec.yaml\nconfig file.\n\nAttributes\n----------\nscenario_defs : dict[str, ScenarioSpec]\n    Dict of scenario definitions. The keys are scenario IDs, and the values\n    are the corresponding `ScenarioSpec` objects.\nscenario_groups : dict[str, ScenarioGroupSpec]\n    Dict of scenario group definitions. The keys are scenario group IDs, and\n    the values are the corresponding `ScenarioGroupSpec` objects.\nscenario_order : dist[str, list[str]]\n    Dict of scenario groups in the order they are to be computed in the\n    model run. The keys are the scenario group IDs defined under\n    `scenario_groups`. The values are lists of scenario IDs in the order\n    they should be evaluated within the group.\n\nProperties\n----------\nscenario_ids : list[str]\n    List of scenario IDs (equal to the keys of `scenario_defs`).\nscenario_group_ids : list[str]\n    List of scenario group IDs (equal to the keys of `scenario_groups`).\nscenario_ids_in_order : list[str]\n    Flat list of scenario IDs in the order they should be evaluated in the\n    model run, irrespective of scenario groups.",
+            "properties": {
+                "scenario_defs": {
+                    "additionalProperties": {
+                        "$ref": "#/$defs/ScenarioSpec"
+                    },
+                    "title": "Scenario Defs",
+                    "type": "object"
+                },
+                "scenario_groups": {
+                    "additionalProperties": {
+                        "$ref": "#/$defs/ScenarioGroupSpec"
+                    },
+                    "title": "Scenario Groups",
+                    "type": "object"
+                },
+                "scenario_order": {
+                    "additionalProperties": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "title": "Scenario Order",
+                    "type": "object"
+                }
+            },
+            "required": [
+                "scenario_defs",
+                "scenario_groups",
+                "scenario_order"
+            ],
+            "title": "ScenariosConfig",
+            "type": "object"
+        },
+        "VariableSpec": {
+            "additionalProperties": false,
+            "description": "Specification for a variable in the model.\n\n*Note*: At the moment, it is assumed that all variables in the model take\nnumerical float values. It therefore has no datatype attribute, but this may\nbe added in the future if necessary.\n\nAttributes\n----------\nvar_id : str\n    Short id for the variable, to be used in formulas. Must be unique in a\n    given application. May only contain alphanumeric characters and\n    underscores (no spaces), and cannot start with a numerical character.\n    Note that ids are case-sensitive. It is recommended to only use\n    lowercase letters, although this is not enforced.\nname : str\n    Human-friendly name of the variable. Can contain any characters, but it\n    is recommended to keep it short and not use punctuation.\ndescription : str\n    Prose description of the variable. Can be one or more full sentences.\nunit : str\n    Unit of measurement for the variable. Must be a valid unit string that\n    is recognized by the application.\ndimensions : DimsConfig or tuple of str\n    Dimensions that the variable depends on. If possible, it should be\n    specified as a `DimsConfig` object whose `.dims` attribute contains\n    `DimSpec` objects only for the dimensions that the variable depends on.\n    See the `config.model.dims` module for details about the `DimsConfig`\n    class. Note that the same dimension in different variables must be\n    represented by the same `DimSpec` instance, not by separate identical\n    instances. This is automatically taken care of if the variable\n    definition is loaded from a complete config file by\n    `.config.app.AppConfig.from_yaml`.\n    `dimensions` can also temoprarily be specified as a tuple of dimension\n    IDs (strings). An actual `DimsConfig` object can then later be assigned\n    (and checked for consistency) using the `.set_dims_config` method.\n    Since `.dimensions` can be either a `DimsConfig` object or a tuple of\n    strings, it is recommended not to access it directly, and instead use\n    the property `.dim_ids` go get the string-valued dimension IDs, or the\n    `.dim_specs` property to get a dict of `DimSpec` objects (with the\n    dimension IDs as keys). The latter property will raise a\n    `DimsConfigNotSetError` exception if it is accessed and a `DimsConfig`\n    object has not been set yet, but is guaranteed to return a dict of\n    `DimSpec` objects if it succeeds.\n    **Notice on multi-level dimensions**: If the variable depends on some\n    but not all levels of a multi-level dimension, when `dimensions` is\n    specified as a tuple of dimension IDs the levels should be specified as\n    separate dimensions with IDs in the form `<dim_id>/<level_id>`, where\n    `<dim_id>` is the ID of the parent multi-level dimension and\n    `<level_id>` is the ID of the sub-dimension level. When a `DimsConfig`\n    object is set and contains a multi-level dimension that matches\n    `<dim_id>`, the required sub-dimension `DimSpec` instances will be set\n    directly in the `dims` field of the `DimsConfig` object that is set on\n    the `VariableSpec` instance. These will then look like full dimensions\n    in their own right, but their parent `MultilevelDimSpec` instance will\n    be accessible through their `hierarchy` attribute.\n\nProperties\n----------\ndim_ids : tuple[str, ...]\n    Tuple of dimension ids, as strings. This will be equal to `dimensions`\n    if it has not yet been set to a `DimsConfig` instance, or the keys of\n    `dimensions.dims` if it has been.\ndim_specs : dict[str, DimSpec]\n    Dict with dimension ids as keys, and `DimSpec` instances as values.\n    This is the same as `dimensions.dims` if it has been set to a\n    `DimsConfig` instance, but will raise a `DimsConfigNotSetError`\n    exception if it has not yet been set to a `DimsConfig` instance.",
+            "properties": {
+                "var_id": {
+                    "title": "Var Id",
+                    "type": "string"
+                },
+                "name": {
+                    "title": "Name",
+                    "type": "string"
+                },
+                "description": {
+                    "title": "Description",
+                    "type": "string"
+                },
+                "unit": {
+                    "title": "Unit",
+                    "type": "string"
+                },
+                "dimensions": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/DimsConfig"
+                        },
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        }
+                    ],
+                    "title": "Dimensions"
+                }
+            },
+            "required": [
+                "name",
+                "description",
+                "unit",
+                "dimensions"
+            ],
+            "title": "VariableSpec",
+            "type": "object"
+        },
+        "VariablesConfig": {
+            "additionalProperties": false,
+            "description": "Container for variable specifications used in the model.\n\nThis class contains a dictionary of VariableSpec instances by variable ID in\nthe `variables` field, which is the only actual data field in this class,\nand some convenience properties for accessing variable IDs and names.\n\nWhen initializing the model, the `__init__` and `model_validate` methods\nwill accept either a dict with `variables` as its only key and an\nappropriate dict of variable IDs to variable specifications as its value, or\na dict of variable IDs to variable specifications directly. The latter will\nbe assumed if these methods receive an object that is not a dict or other\nMapping (determined by `isinstance(obj, collections.abc.Mapping)`) of length\n1 with `variables` as its only key.\n\nIf the dict used to initialize the `variables` field contains dicts of\n`VariableSpec` field names to values rather than a `VariableSpec` instances,\nthe dicts do not need to contain the `var_id` field. For items where the\n`var_id` field is missing, the keys are used to populate it. If the `var_id`\nfield is present, it must match the key in the dict, or a ValidationError\nwill be raised.\n\nAttributes\n----------\nvariables : dict[str, VariableSpec]\n    Dictionary with variable ids as keys and `VariableSpec` instances as\n    values. The keys will be equal to the `var_id` attributes of the\n    `VariableSpec` instances, which are required to have unique `var_id`\n    values.\n\nProperties\n----------\nvar_ids : list[str]\n    List of variable ids (keys in `self.variables`).\nvar_names : dict[str, str]\n    Dict with variable ids as keys and names as values.",
+            "properties": {
+                "variables": {
+                    "additionalProperties": {
+                        "$ref": "#/$defs/VariableSpec"
+                    },
+                    "title": "Variables",
+                    "type": "object"
+                }
+            },
+            "required": [
+                "variables"
+            ],
+            "title": "VariablesConfig",
+            "type": "object"
+        },
+        "PlotSettings": {
+            "additionalProperties": false,
+            "description": "Settings for a plot, given data in a DataFrame or othercolumnar format.\n\nThe fields of this class hold options for generating a specific type of\nplot. The fields `x_axis_dim`, `value_dim`, `filters`, `disaggregated_dims`\nand `plot_type` are specifically intended to set default options that are\nused to pre-populate the choices and pull-down menus for the generic\nvariable plot in the results section of the web UI. This can be used to\nset options that are usually necessary to produce a meaningful plot (like\neither disaggregating or filtering to a single value for scenarios and\nsensitivity trajectories (\"Bane\")).\n\n*NB!* The fields `disaggregated_dims`, `filters` and\n`dim_coordinate_ordering` may contain dimensions that are not present in all\nvariables, but that should be used when they are. The plotting code needs to\ncheck which dimension columns are present in the variable that is to be\nplotted, and not try to filter, disaggregate or populate menus with choices\nfor dimensions that are not present.",
+            "properties": {
+                "plot_type": {
+                    "title": "Plot Type",
+                    "type": "string",
+                    "enum": ["line", "bar", "stackedbar", "fractionbar", "scatter"]
+                },
+                "x_axis_dim": {
+                    "title": "X-axis dimension name",
+                    "type": "string"
+                },
+                "value_dim": {
+                    "title": "Value dimension name (y-axis)",
+                    "type": "string"
+                },
+                "filters": {
+                    "title": "Values to filter on for given dimensions",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "anyOf": [
+                                {"type": "string"},
+                                {"type": "integer"}
+                            ]
+                        }
+                    }
+                },
+                "disaggregated_dims": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "Dimensions to disaggregate"
+                },
+                "dim_coordinate_ordering": {
+                    "title": "Dimension coordinate ordering",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "x_axis_sort_order": {
+                    "title": "X-axis sort order",
+                    "description": "Explicit sorting of coordinate values for the x-axis dimension, as a list of values in the desired order.",
+                    "type": "array",
+                    "items": {
+                        "anyOf": [
+                            {"type": "string"},
+                            {"type": "integer"}
+                        ]
+                    }
+                },
+                "use_scenario_diffs": {
+                    "title": "Whether to take differences between scenarios rather than using the absolute variable values in each scenario.",
+                    "type": "boolean"
+                },
+                "plot_color_map": {
+                    "$ref": "#/$defs/PlotColorMap",
+                    "type": "object"
+                }
+            },
+            "required": [
+                "plot_type",
+                "x_axis_dim",
+                "value_dim"
+            ],
+            "title": "PlotSettings",
+            "type": "object"
+        },
+        "PlotColorMapInnerDict": {
+            "title": "PlotColorMapInnerDict",
+            "description": "A dictionary mapping dimension coordinate values (strings) to color strings (e.g., hex codes).",
+            "type": "object",
+            "additionalProperties": {
+                "type": "string",
+                "description": "A color string, typically a hex code like '#RRGGBB'."
+            }
+        },
+        "PlotColorMap": {
+            "title": "PlotColorMap",
+            "description": "A dictionary where keys are dimension IDs (strings) and values are dictionaries mapping dimension coordinate values to color strings. The dimension IDs must be present in the `dimensions.dim_ids_expanded_subdims` of the AppConfig.",
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/$defs/PlotColorMapInnerDict"
+            },
+            "default": {},
+            "examples": [
+                {
+                    "gass": { "CO2": "#FF0000", "CH4": "#00FF00" }
+                }
+            ]
+        }
+    },
+    "additionalProperties": false,
+    "description": "Config container for settings for the application as a whole.\n\nThe class contains a few fields single-valued application settings. Most\nother attributes are instances of other config classes.\n\nScalar attributes\n-----------------\napp_name : str\n    Name of the application.\napp_code : str\n    Short code for the application. Should only contain alphanumeric\n    characters and underscores, which may be used in package names or other\n    instances where a longer name with spaces or special characters is not\n    appropriate.\nconfig_version : str\n    A version string for the revision of the configuration file that the\n    instance was loaded from.\n\nConfig class attributes\n-----------------------\ndimensions : DimsConfig\n    Specification of dimensions used in the model.\nvariables : VariablesConfig\n    Specification of variables used in the model.\nscenarios : ScenariosConfig\n    Specification of scenarios and scenario groups in the model.\ninput_data_sources : InputDataSourcesConfig\n    Specification of input data sources used in the model, what classes and\n    parameters are used to process them, and what variables each of them\n    produces.\napp_params : AppParamsConfig\n    Specification of parameters that the app needs to run and to define data\n    structures. Mainly parameters that are decided during app design, and\n    that are rarely altered by the user, such as data table column names,\n    not numerical constants or other parameters that are used in\n    calculations.\nparams : ModelParamsConfig\n    Specification of parameters that can be adjusted by the user, and that\n    control model behavior or are used as input values to calculations (but\n    not derived from input data or dependent on dimensions like variables\n    are).",
+    "properties": {
+        "app_name": {
+            "title": "App Name",
+            "type": "string"
+        },
+        "app_code": {
+            "title": "App Code",
+            "type": "string"
+        },
+        "config_version": {
+            "title": "Config Version",
+            "type": "string"
+        },
+        "dimensions": {
+            "oneOf": [
+                {
+                    "additionalProperties": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/$defs/DimSpec"
+                            },
+                            {
+                                "$ref": "#/$defs/MultilevelDimSpec"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "$ref": "#/$defs/DimsConfig"
+                }
+            ]
+        },
+        "variables": {
+            "oneOf": [
+                {
+                    "additionalProperties": {
+                        "$ref": "#/$defs/VariableSpec"
+                    }
+                },
+                {
+                    "$ref": "#/$defs/VariablesConfig"
+                }
+            ]
+        },
+        "app_params": {
+            "$ref": "#/$defs/AppParamsSpec"
+        },
+        "params": {
+            "$ref": "#/$defs/ModelParamsConfig"
+        },
+        "scenarios": {
+            "$ref": "#/$defs/ScenariosConfig"
+        },
+        "input_data_sources": {
+            "additionalProperties": {
+                "$ref": "#/$defs/InputDataSourceSpec"
+            },
+            "title": "Input Data Sources",
+            "type": "object"
+        },
+        "results_plot_settings": {
+            "additionalProperties": {
+                "$ref": "#/$defs/PlotSettings"
+            },
+            "title": "Results Plot Settings",
+            "type": "object"
+        },
+        "plot_default_variable": {
+            "title": "Default variable to plot in the results section of the web UI",
+            "type": "string"
+        },
+        "plot_default_color_map": {
+            "$ref": "#/$defs/PlotColorMap",
+            "type": "object"
+        }
+    },
+    "required": [
+        "app_name",
+        "app_code",
+        "config_version",
+        "dimensions",
+        "variables",
+        "app_params",
+        "params",
+        "scenarios",
+        "input_data_sources"
+    ],
+    "title": "AppConfig",
+    "type": "object"
+}
