@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Formula Files Schema",
-  "description": "Schema for nested YAML formula definitions used in climate and macroeconomics modeling.",
+  "description": "Schema for nested YAML formula definitions used in LOKFRAM and generally in the CICERO decomposition-based projection model",
   "type": "array",
   "items": {
     "$ref": "#/$defs/NestedFormulaDef"
@@ -9,13 +9,15 @@
   "$defs": {
     "NestedFormulaDef": {
       "type": "object",
-      "description": "Root-level formula definition for a specific variable and scenario.",
+      "description": "Blokk for å definere formler for en gitt variabel og scenario",
       "properties": {
         "variabel": {
-          "type": "string"
+          "type": "string",
+          "description": "ID for variabelen som formlene gjelder for."
         },
         "scenario": {
-          "type": "string"
+          "type": "string",
+          "description": "ID for scenarioet som formlene gjelder fra."
         },
         "formler": {
           "type": "array",
@@ -32,7 +34,7 @@
       "additionalProperties": false
     },
     "FormulaOrTree": {
-      "description": "Discriminator validating whether the block is a base Formula or a nested FormulaTree.",
+      "description": "Enten en enkelt formel eller et nøstet tre av sub-koordinater med formler for hver",
       "oneOf": [
         {
           "$ref": "#/$defs/Formula"
@@ -44,13 +46,13 @@
     },
     "Formula": {
       "type": "object",
-      "description": "A single formula mapped to a final coordinate patch.",
+      "description": "En enkelt formel definert for ett gitt sett av koordinater. Koordinatene kan være delvis spesifisert, og vil da gjelde for alle underliggende koordinater.",
       "properties": {
         "koordinater": {
           "$ref": "#/$defs/CoordPatch"
         },
         "formel": {
-          "description": "The formula string or numeric constant.",
+          "description": "Formelen som skal brukes for de spesifiserte koordinatene",
           "anyOf": [
             {
               "type": "string"
@@ -69,7 +71,7 @@
     },
     "FormulaTree": {
       "type": "object",
-      "description": "A nested tree of formula definitions containing sub-patches.",
+      "description": "Et nøstet tre av formeldefinisjoner for ulike underliggende koordinatområder",
       "properties": {
         "koordinater": {
           "$ref": "#/$defs/CoordPatch"
@@ -89,13 +91,13 @@
     },
     "CoordPatch": {
       "type": "object",
-      "description": "A dictionary mapping dimension IDs to coordinate values or further nested sub-dimensions.",
+      "description": "Spesifisering av et koordinatområde som en gitt formel eller gitte formler skal gjelde i",
       "additionalProperties": {
         "$ref": "#/$defs/CoordValue"
       }
     },
     "CoordValue": {
-      "description": "Valid types for a YAML coordinate value, enabling deep recursion.",
+      "description": "En enkelt koordinatverdi, en liste av koordinatverdier (omgitt av firkantparenteser og atskilt av komma), eller et koordinatintervall (start- og sluttkoordinate med to punktum \"..\" og ingen mellomrom mellom).",
       "anyOf": [
         {
           "type": "string"
