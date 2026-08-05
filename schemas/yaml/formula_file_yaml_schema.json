@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Formula Files Schema",
+  "description": "Schema for nested YAML formula definitions used in LOKFRAM and generally in the CICERO decomposition-based projection model",
+  "type": "array",
+  "items": {
+    "$ref": "#/$defs/NestedFormulaDef"
+  },
+  "$defs": {
+    "NestedFormulaDef": {
+      "type": "object",
+      "description": "Blokk for å definere formler for en gitt variabel og scenario",
+      "properties": {
+        "variabel": {
+          "type": "string",
+          "description": "ID for variabelen som formlene gjelder for."
+        },
+        "scenario": {
+          "type": "string",
+          "description": "ID for scenarioet som formlene gjelder fra."
+        },
+        "formler": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FormulaOrTree"
+          }
+        }
+      },
+      "required": [
+        "variabel",
+        "scenario",
+        "formler"
+      ],
+      "additionalProperties": false
+    },
+    "FormulaOrTree": {
+      "description": "Enten en enkelt formel eller et nøstet tre av sub-koordinater med formler for hver",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/Formula"
+        },
+        {
+          "$ref": "#/$defs/FormulaTree"
+        }
+      ]
+    },
+    "Formula": {
+      "type": "object",
+      "description": "En enkelt formel definert for ett gitt sett av koordinater. Koordinatene kan være delvis spesifisert, og vil da gjelde for alle underliggende koordinater.",
+      "properties": {
+        "koordinater": {
+          "$ref": "#/$defs/CoordPatch"
+        },
+        "formel": {
+          "description": "Formelen som skal brukes for de spesifiserte koordinatene",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "required": [
+        "koordinater",
+        "formel"
+      ],
+      "additionalProperties": false
+    },
+    "FormulaTree": {
+      "type": "object",
+      "description": "Et nøstet tre av formeldefinisjoner for ulike underliggende koordinatområder",
+      "properties": {
+        "koordinater": {
+          "$ref": "#/$defs/CoordPatch"
+        },
+        "formler": {
+          "type": "array",
+          "description": "En liste av formeldefinisjoner for ulike underliggende koordinatområder. Hver definisjon angir koordinatområde i punktet \"koordinater\", og enten en enkelt formel i punktet \"formel\" eller et nytt nøstet tre av formeldefinisjoner i punktet \"formler\".",
+          "items": {
+            "$ref": "#/$defs/FormulaOrTree"
+          }
+        }
+      },
+      "required": [
+        "koordinater",
+        "formler"
+      ],
+      "additionalProperties": false
+    },
+    "CoordPatch": {
+      "type": "object",
+      "description": "Spesifisering av et koordinatområde som en gitt formel eller gitte formler skal gjelde i, angitt som en mapping fra dimensjonsnavn til koordinatverdier eller -intervaller",
+      "additionalProperties": {
+        "$ref": "#/$defs/CoordValue"
+      }
+    },
+    "CoordValue": {
+      "description": "En enkelt koordinatverdi, en liste av koordinatverdier (omgitt av firkantparenteser og atskilt av komma), eller et koordinatintervall (start- og sluttkoordinate med to punktum \"..\" og ingen mellomrom mellom).",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        {
+          "$ref": "#/$defs/CoordPatch"
+        }
+      ]
+    }
+  }
+}
