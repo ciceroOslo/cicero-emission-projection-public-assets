@@ -688,13 +688,20 @@
                     "title": "Values to filter on for given dimensions",
                     "type": "object",
                     "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "anyOf": [
-                                {"type": "string"},
-                                {"type": "integer"}
-                            ]
-                        }
+                        "anyOf": [
+                            {
+                                "type": "array",
+                                "items": {
+                                    "anyOf": [
+                                        {"type": "string"},
+                                        {"type": "integer"}
+                                    ]
+                                }
+                            },
+                            {
+                                "const": "*"
+                            }
+                        ]
                     }
                 },
                 "disaggregated_dims": {
