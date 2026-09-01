@@ -671,6 +671,11 @@
             "additionalProperties": false,
             "description": "Settings for a plot, given data in a DataFrame or othercolumnar format.\n\nThe fields of this class hold options for generating a specific type of\nplot. The fields `x_axis_dim`, `value_dim`, `filters`, `disaggregated_dims`\nand `plot_type` are specifically intended to set default options that are\nused to pre-populate the choices and pull-down menus for the generic\nvariable plot in the results section of the web UI. This can be used to\nset options that are usually necessary to produce a meaningful plot (like\neither disaggregating or filtering to a single value for scenarios and\nsensitivity trajectories (\"Bane\")).\n\n*NB!* The fields `disaggregated_dims`, `filters` and\n`dim_coordinate_ordering` may contain dimensions that are not present in all\nvariables, but that should be used when they are. The plotting code needs to\ncheck which dimension columns are present in the variable that is to be\nplotted, and not try to filter, disaggregate or populate menus with choices\nfor dimensions that are not present.",
             "properties": {
+                "default_plot_variable": {
+                    "title": "Default variable to plot",
+                    "description": "The name of the variable that should be displayed by default for this chart, if applicable.",
+                    "type": "string"
+                },
                 "plot_type": {
                     "title": "Plot Type",
                     "type": "string",
@@ -717,7 +722,10 @@
                     "additionalProperties": {
                         "type": "array",
                         "items": {
-                            "type": "string"
+                            "anyOf": [
+                                {"type": "string"},
+                                {"type": "integer"}
+                            ]
                         }
                     }
                 },
@@ -739,6 +747,14 @@
                 "plot_color_map": {
                     "$ref": "#/$defs/PlotColorMap",
                     "type": "object"
+                },
+                "plot_options": {
+                    "anyOf": [
+                        {"$ref": "#/$defs/PlotOptions"},
+                        {"type": "null"}
+                    ],
+                    "default": null,
+                    "title": "Plot Options"
                 }
             },
             "required": [
@@ -771,6 +787,285 @@
                     "gass": { "CO2": "#FF0000", "CH4": "#00FF00" }
                 }
             ]
+        },
+        "TraceOptions": {
+            "additionalProperties": false,
+            "description": "Options for defining or customizing the appearance of plotly traces.\n\nThis object is intended to set options for a chart that may contain multiple traces, where each trace corresponds to a coordinate value for a disaggregated dimension.",
+            "properties": {
+                "default_options": {
+                    "title": "Default options for all traces in the chart",
+                    "type": "object",
+                    "default": {}
+                },
+                "coordinate_options": {
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "object"
+                            }
+                        },
+                        {"type": "null"}
+                    ],
+                    "default": null,
+                    "title": "Options for traces corresponding to specific coordinate values"
+                }
+            },
+            "title": "TraceOptions",
+            "type": "object"
+        },
+        "VLineOptions": {
+            "additionalProperties": false,
+            "description": "Options for the appearance of vertical lines in a plot.",
+            "properties": {
+                "x_pos": {
+                    "title": "X-coordinate of the vertical line",
+                    "anyOf": [
+                        {"type": "number"},
+                        {"type": "string"}
+                    ]
+                },
+                "custom_opts": {
+                    "anyOf": [
+                        {"type": "object"},
+                        {"type": "null"}
+                    ],
+                    "default": null,
+                    "title": "Additional Plotly shape options for the vertical line"
+                },
+                "left_label": {
+                    "anyOf": [
+                        {"type": "string"},
+                        {"type": "null"}
+                    ],
+                    "default": null,
+                    "title": "Label to the left of the vertical line"
+                },
+                "right_label": {
+                    "anyOf": [
+                        {"type": "string"},
+                        {"type": "null"}
+                    ],
+                    "default": null,
+                    "title": "Label to the right of the vertical line"
+                },
+                "left_label_opts": {
+                    "anyOf": [
+                        {"type": "object"},
+                        {"type": "null"}
+                    ],
+                    "default": null,
+                    "title": "Additional Plotly annotation options for the left label"
+                },
+                "right_label_opts": {
+                    "anyOf": [
+                        {"type": "object"},
+                        {"type": "null"}
+                    ],
+                    "default": null,
+                    "title": "Additional Plotly annotation options for the right label"
+                }
+            },
+            "required": [
+                "x_pos"
+            ],
+            "title": "VLineOptions",
+            "type": "object"
+        },
+        "PlotOptions": {
+            "additionalProperties": false,
+            "description": "Options for defining or customizing the appearance of result charts.",
+            "properties": {
+                "dim_trace_options": {
+                    "title": "Trace options to use when specific dimensions are disaggregated",
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/$defs/TraceOptions"
+                    },
+                    "default": {}
+                },
+                "default_trace_options": {
+                    "$ref": "#/$defs/TraceOptions",
+                    "title": "Default options for all traces in the chart"
+                },
+                "v_lines": {
+                    "title": "Options for vertical lines to be drawn in the chart",
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/$defs/VLineOptions"
+                    },
+                    "default": {}
+                }
+            },
+            "title": "PlotOptions",
+            "type": "object"
+        },
+        "TabbedChartsConfig": {
+            "additionalProperties": false,
+            "description": "Configuration for a collection of disaggregated charts displayed in a tabbed layout.\n\nThe charts in the collection are displayed in a tabbed layout, with one chart per coordinate value of a disaggregated dimension.",
+            "properties": {
+                "collection_type": {
+                    "const": "tabbed",
+                    "default": "tabbed",
+                    "title": "Collection Type",
+                    "type": "string"
+                },
+                "base_plot_settings": {
+                    "anyOf": [
+                        {"$ref": "#/$defs/PlotSettings"},
+                        {"type": "null"}
+                    ],
+                    "default": null,
+                    "title": "Base plot settings for all charts in the collection"
+                },
+                "disaggregated_dim": {
+                    "title": "Dimension to disaggregate on, with one chart per coordinate value",
+                    "type": "string"
+                },
+                "chart_settings": {
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/$defs/PlotSettings"
+                            }
+                        },
+                        {"type": "null"}
+                    ],
+                    "default": null,
+                    "title": "Custom plot settings per coordinate value of the disaggregated dimension"
+                },
+                "sub_collection_config": {
+                    "anyOf": [
+                        {"$ref": "#/$defs/TabbedChartsConfig"},
+                        {"$ref": "#/$defs/SelectionChartsConfig"},
+                        {"type": "null"}
+                    ],
+                    "default": null,
+                    "discriminator": {
+                        "propertyName": "collection_type",
+                        "mapping": {
+                            "tabbed": "#/$defs/TabbedChartsConfig",
+                            "selection": "#/$defs/SelectionChartsConfig"
+                        }
+                    },
+                    "title": "Optional sub-collection of disaggregated charts"
+                }
+            },
+            "required": [
+                "disaggregated_dim"
+            ],
+            "title": "TabbedChartsConfig",
+            "type": "object"
+        },
+        "SelectionChartsConfig": {
+            "additionalProperties": false,
+            "description": "Configuration for a collection of disaggregated charts displayed with a selection menu.\n\nThe charts in the collection are displayed with a selection menu, with one chart per coordinate value of a disaggregated dimension.",
+            "properties": {
+                "collection_type": {
+                    "const": "selection",
+                    "default": "selection",
+                    "title": "Collection Type",
+                    "type": "string"
+                },
+                "base_plot_settings": {
+                    "anyOf": [
+                        {"$ref": "#/$defs/PlotSettings"},
+                        {"type": "null"}
+                    ],
+                    "default": null,
+                    "title": "Base plot settings for all charts in the collection"
+                },
+                "disaggregated_dim": {
+                    "title": "Dimension to disaggregate on, with one chart per coordinate value",
+                    "type": "string"
+                },
+                "chart_settings": {
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/$defs/PlotSettings"
+                            }
+                        },
+                        {"type": "null"}
+                    ],
+                    "default": null,
+                    "title": "Custom plot settings per coordinate value of the disaggregated dimension"
+                },
+                "sub_collection_config": {
+                    "anyOf": [
+                        {"$ref": "#/$defs/TabbedChartsConfig"},
+                        {"$ref": "#/$defs/SelectionChartsConfig"},
+                        {"type": "null"}
+                    ],
+                    "default": null,
+                    "discriminator": {
+                        "propertyName": "collection_type",
+                        "mapping": {
+                            "tabbed": "#/$defs/TabbedChartsConfig",
+                            "selection": "#/$defs/SelectionChartsConfig"
+                        }
+                    },
+                    "title": "Optional sub-collection of disaggregated charts"
+                }
+            },
+            "required": [
+                "disaggregated_dim"
+            ],
+            "title": "SelectionChartsConfig",
+            "type": "object"
+        },
+        "DashboardPageConfig": {
+            "additionalProperties": false,
+            "description": "Configuration for a single dashboard-type page.",
+            "properties": {
+                "page_id": {
+                    "title": "Unique ID for the page, used to identify it in the sidebar",
+                    "type": "string"
+                },
+                "title": {
+                    "title": "Title of the page",
+                    "type": "string"
+                },
+                "description": {
+                    "anyOf": [
+                        {"type": "string"},
+                        {"type": "null"}
+                    ],
+                    "default": null,
+                    "title": "Description of the page"
+                },
+                "base_plot_settings": {
+                    "anyOf": [
+                        {"$ref": "#/$defs/PlotSettings"},
+                        {"type": "null"}
+                    ],
+                    "default": null,
+                    "title": "Base plot settings for all charts on the page"
+                },
+                "charts": {
+                    "anyOf": [
+                        {"$ref": "#/$defs/TabbedChartsConfig"},
+                        {"$ref": "#/$defs/SelectionChartsConfig"}
+                    ],
+                    "discriminator": {
+                        "propertyName": "collection_type",
+                        "mapping": {
+                            "tabbed": "#/$defs/TabbedChartsConfig",
+                            "selection": "#/$defs/SelectionChartsConfig"
+                        }
+                    },
+                    "title": "Configuration for the disaggregated charts on the page"
+                }
+            },
+            "required": [
+                "page_id",
+                "title",
+                "charts"
+            ],
+            "title": "DashboardPageConfig",
+            "type": "object"
         }
     },
     "additionalProperties": false,
@@ -842,13 +1137,29 @@
             "title": "Results Plot Settings",
             "type": "object"
         },
-        "plot_default_variable": {
-            "title": "Default variable to plot in the results section of the web UI",
-            "type": "string"
+        "results_base_plot_settings": {
+            "anyOf": [
+                {"$ref": "#/$defs/PlotSettings"},
+                {"type": "null"}
+            ],
+            "default": null,
+            "title": "Base plot settings used as defaults for all entries in results_plot_settings"
         },
-        "plot_default_color_map": {
-            "$ref": "#/$defs/PlotColorMap",
-            "type": "object"
+        "results_plot_settings_default_key": {
+            "anyOf": [
+                {"type": "string"},
+                {"type": "null"}
+            ],
+            "default": null,
+            "title": "Key of the default PlotSettings instance in results_plot_settings"
+        },
+        "results_dashboard_configs": {
+            "items": {
+                "$ref": "#/$defs/DashboardPageConfig"
+            },
+            "title": "Results Dashboard Configs",
+            "type": "array",
+            "default": []
         }
     },
     "required": [
